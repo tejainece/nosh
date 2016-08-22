@@ -1,6 +1,13 @@
 # nosh
 nosh is a no shit C++ test framework
 
+# Why write tests with nosh?
+1. What you see is what you get. No magic behind your back.
+2. No shoutcased macros
+3. A test is a simple C++ class. An assertion is a simple method of the Test class with defined syntax.
+4. Easy to understand and get started.
+5. Develop parameter based tests. Easily generate parameters for tests using Generators.
+
 # Getting started
 1. Download `nosh.hpp` or clone this repository
 2. Make sure `nosh.hpp` is in one of your project's include paths
