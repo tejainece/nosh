@@ -61,7 +61,11 @@ TBD
 ## Creating generators
 TBD
 
-# TODO
+# Features
+- [x] Test fixtures
+- [x] Basic and binary assertions
+- [x] Tests with parameters
+- [x] Parameter generators
 - [ ] Print information about test case before run. Print parameters in case parameters are involved
 - [ ] Versbose/No verbose command line flag
 - [ ] Filter tests from command line
