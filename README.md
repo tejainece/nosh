@@ -36,15 +36,29 @@ int main(void) {
 |:--------------------|:-----------------------|:-------------|
 | `assertTrue(`_condition_`)`;  | `expectTrue(`_condition_`)`;   | _condition_ is true |
 | `assertFalse(`_condition_`)`; | `expectFalse(`_condition_`)`;  | _condition_ is false |
+
 ### Binary assertions
+
+
 | **Fatal assertion** | **Nonfatal assertion** | **Verifies** |
 |:--------------------|:-----------------------|:-------------|
-|`assertEqual(`_val1_`, `_val2_`);`|`expectEqual(`_val1_`, `_val2_`);`| _val1_ `==` _val2_ |
+|`assertEQ(`_val1_`, `_val2_`);`|`expectEQ(`_val1_`, `_val2_`);`| _val1_ `==` _val2_ |
 |`assertNE(`_val1_`, `_val2_`);`|`expectNE(`_val1_`, `_val2_`);`| _val1_ `!=` _val2_ |
 |`assertLT(`_val1_`, `_val2_`);`|`expectLT(`_val1_`, `_val2_`);`| _val1_ `<` _val2_ |
 |`assertLE(`_val1_`, `_val2_`);`|`expectLE(`_val1_`, `_val2_`);`| _val1_ `<=` _val2_ |
 |`assertGT(`_val1_`, `_val2_`);`|`expectGT(`_val1_`, `_val2_`);`| _val1_ `>` _val2_ |
 |`assertGE(`_val1_`, `_val2_`);`|`expectGE(`_val1_`, `_val2_`);`| _val1_ `>=` _val2_ |
+
+## Test with assertions
+TBD
+
+## Test with parameters
+TBD
+
+## Generating parameters
+TBD
+
+## Creating generators
 TBD
 
 # TODO
