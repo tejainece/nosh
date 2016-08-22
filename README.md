@@ -7,6 +7,44 @@ nosh is a no shit C++ test framework
 3. Follow the tutorial section to add test cases to your project using nosh
 
 # Tutorial
+## Simple test
+
+```cpp
+class SimpleTest: public Test {
+public:
+  SimpleTest() {
+    //TODO Construction goes here
+  }
+  
+  virtual ~SimpleTest() {
+    //TODO Destruction goes here
+  }
+  
+  virtual void run() {
+    //TODO Test logic goes here
+  }
+};
+
+int main(void) {
+  execTest(SimpleTest());
+}
+```
+
+## Assertions
+### Basic assertions
+| **Fatal assertion** | **Nonfatal assertion** | **Verifies** |
+|:--------------------|:-----------------------|:-------------|
+| `assertTrue(`_condition_`)`;  | `expectTrue(`_condition_`)`;   | _condition_ is true |
+| `assertFalse(`_condition_`)`; | `expectFalse(`_condition_`)`;  | _condition_ is false |
+### Binary assertions
+| **Fatal assertion** | **Nonfatal assertion** | **Verifies** |
+|:--------------------|:-----------------------|:-------------|
+|`assertEqual(`_val1_`, `_val2_`);`|`expectEqual(`_val1_`, `_val2_`);`| _val1_ `==` _val2_ |
+|`assertNE(`_val1_`, `_val2_`);`|`expectNE(`_val1_`, `_val2_`);`| _val1_ `!=` _val2_ |
+|`assertLT(`_val1_`, `_val2_`);`|`expectLT(`_val1_`, `_val2_`);`| _val1_ `<` _val2_ |
+|`assertLE(`_val1_`, `_val2_`);`|`expectLE(`_val1_`, `_val2_`);`| _val1_ `<=` _val2_ |
+|`assertGT(`_val1_`, `_val2_`);`|`expectGT(`_val1_`, `_val2_`);`| _val1_ `>` _val2_ |
+|`assertGE(`_val1_`, `_val2_`);`|`expectGE(`_val1_`, `_val2_`);`| _val1_ `>=` _val2_ |
 TBD
 
 # TODO
