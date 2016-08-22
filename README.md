@@ -2,9 +2,9 @@
 nosh is a no shit C++ test framework
 
 # Getting started
-1) Download `nosh.hpp` or clone this repository
-2) Make sure `nosh.hpp` is in one of your project's include paths
-3) Follow the tutorial section to add test cases to your project using nosh
+1. Download `nosh.hpp` or clone this repository
+2. Make sure `nosh.hpp` is in one of your project's include paths
+3. Follow the tutorial section to add test cases to your project using nosh
 
 # Tutorial
 TBD
