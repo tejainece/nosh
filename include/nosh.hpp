@@ -1,3 +1,10 @@
+/*
+ * simptst.hpp
+ *
+ *  Created on: 18 aug. 2016
+ *      Author: SERAGUD
+ */
+
 #ifndef NOSH_NOSH_HPP_
 #define NOSH_NOSH_HPP_
 
@@ -8,6 +15,7 @@
 #include <stdint.h>
 #include <memory>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -186,7 +194,7 @@ public:
 		auto lPos = mStart + (aIdx * mStep);
 
 		if (lPos < mEnd) {
-			return lPos;
+			return (Type) lPos;
 		}
 
 		return mEnd;
@@ -492,7 +500,6 @@ public:
 class Param {
 public:
 	virtual ~Param() {
-
 	}
 
 	virtual string printableName() const = 0;
@@ -533,13 +540,23 @@ public:
 	virtual ~Test() {
 	}
 
-	virtual void setup() {}
+	virtual void setup() {
+	}
 
-	virtual void teardown() {}
+	virtual void teardown() {
+	}
 
 	virtual void run() = 0;
 
 	virtual string testName(void) = 0;
+
+	virtual string printableParam(void) {
+		return "";
+	}
+
+	virtual string printableBreif(void) {
+		return "";
+	}
 
 	bool didFail(void) {
 		return mTstFailed;
@@ -570,8 +587,15 @@ public:
 	}
 
 	template<typename Type>
-	void expectEqual(Type const aLhs, Type const aRhs, LineInfo const & aLine) {
-		expectEqual(aLhs, aRhs, aLine, { });
+	bool expectEqual(Type const aLhs, Type const aRhs, LineInfo const & aLine) {
+		return expectEqual(aLhs, aRhs, aLine, { });
+	}
+
+	template<typename Type>
+	void assertEqual(Type const aLhs, Type const aRhs, LineInfo const & aLine) {
+		if (!expectEqual<Type>(aLhs, aRhs, aLine)) {
+			throw AssertException();
+		}
 	}
 
 	bool expectEqualUInt8(uint8_t const aLhs, uint8_t const aRhs,
@@ -605,7 +629,14 @@ public:
 
 	void assertEqualUInt8(uint8_t const aLhs, uint8_t const aRhs,
 			LineInfo const & aLine) {
-		if(!expectEqualUInt8(aLhs, aRhs, aLine)) {
+		if (!expectEqualUInt8(aLhs, aRhs, aLine)) {
+			throw AssertException();
+		}
+	}
+
+	void assertEqualUInt8(uint8_t const aLhs, uint8_t const aRhs,
+			LineInfo const & aLine, map<string, string> const &aContext) {
+		if (!expectEqualUInt8(aLhs, aRhs, aLine, aContext)) {
 			throw AssertException();
 		}
 	}
@@ -640,8 +671,15 @@ public:
 	}
 
 	void assertEqualUInt16(uint16_t const aLhs, uint16_t const aRhs,
+			LineInfo const & aLine, map<string, string> const &aContext) {
+		if (!expectEqualUInt16(aLhs, aRhs, aLine, aContext)) {
+			throw AssertException();
+		}
+	}
+
+	void assertEqualUInt16(uint16_t const aLhs, uint16_t const aRhs,
 			LineInfo const & aLine) {
-		if(!expectEqualUInt16(aLhs, aRhs, aLine)) {
+		if (!expectEqualUInt16(aLhs, aRhs, aLine)) {
 			throw AssertException();
 		}
 	}
@@ -676,8 +714,8 @@ public:
 	}
 
 	void assertEqualUInt32(uint32_t const aLhs, uint32_t const aRhs,
-			LineInfo const & aLine) {
-		if(!expectEqualUInt32(aLhs, aRhs, aLine)) {
+			LineInfo const & aLine, map<string, string> const &aContext = { }) {
+		if (!expectEqualUInt32(aLhs, aRhs, aLine, aContext)) {
 			throw AssertException();
 		}
 	}
@@ -709,8 +747,15 @@ public:
 		return expectTrue(aLhs, aLine, { });
 	}
 
+	void assertTrue(bool const aLhs, LineInfo const &aLine,
+			map<string, string> const &aContext) {
+		if (!expectTrue(aLhs, aLine, aContext)) {
+			throw AssertException();
+		}
+	}
+
 	void assertTrue(bool const aLhs, LineInfo const &aLine) {
-		if(!expectTrue(aLhs, aLine, { })) {
+		if (!expectTrue(aLhs, aLine, { })) {
 			throw AssertException();
 		}
 	}
@@ -743,7 +788,14 @@ public:
 	}
 
 	void assertFalse(bool const aLhs, LineInfo const &aLine) {
-		if(!expectFalse(aLhs, aLine, { })) {
+		if (!expectFalse(aLhs, aLine, { })) {
+			throw AssertException();
+		}
+	}
+
+	void assertFalse(bool const aLhs, LineInfo const &aLine,
+			map<string, string> const &aContext) {
+		if (!expectFalse(aLhs, aLine, aContext)) {
 			throw AssertException();
 		}
 	}
@@ -811,12 +863,34 @@ public:
 	virtual void printSummary(void) = 0;
 };
 
+class TestStatus {
+public:
+	bool status;
+
+	string name;
+
+	string breif;
+
+	bool valid;
+
+	TestStatus() :
+			status(false), name(""), breif(""), valid(false) {
+	}
+
+	TestStatus(const bool status, const string name, const string breif,
+			const bool valid = true) :
+			status(status), name(name), breif(breif), valid(valid) {
+	}
+};
+
 class TestRunner: public TestRunnerInterface {
 	Verbosity mVerbosity;
 
 	uint64_t mTests = 0;
 
 	uint64_t mTestsSucceeded = 0;
+
+	map<string, TestStatus> mExecuted;
 
 public:
 	TestRunner(Verbosity const aVerbosity = Verbosity()) :
@@ -827,9 +901,15 @@ public:
 	}
 
 	void exec(Test &aTest) {
+		string printable = aTest.testName();
+		string paramStr = aTest.printableParam();
+		if (paramStr.length() != 0) {
+			printable += " with " + paramStr;
+		}
+
 		mTests++;
 		if (mVerbosity.showTestIntro()) {
-			cout << "Running " << aTest.testName() << " ..." << endl;
+			cout << "Running " << printable << " ..." << endl;
 		}
 
 		TestRunnerInterface::setShowAssertionMsg(aTest,
@@ -839,11 +919,19 @@ public:
 
 		try {
 			aTest.run();
-		} catch(AssertException &exc) {
+		} catch (AssertException &exc) {
 			//Should we show the assert here?
 		}
 
 		aTest.teardown();
+
+		bool repSts = true;
+		if (mExecuted[aTest.testName()].valid == true) {
+			repSts = mExecuted[aTest.testName()].status;
+		}
+		repSts &= !aTest.didFail();
+		mExecuted[aTest.testName()] = TestStatus(repSts, aTest.testName(),
+				aTest.printableBreif());
 
 		if (aTest.didFail() == false) {
 			mTestsSucceeded++;
@@ -860,7 +948,7 @@ public:
 				}
 			} else {
 				if (aTest.didFail()) {
-					cout << "Test failed: " << aTest.testName() << "!" << endl;
+					cout << "Test failed: " << printable << "!" << endl;
 				} else {
 					if (mVerbosity.showTestResultSuccess()) {
 						cout << "Test succeeded!" << endl;
@@ -875,9 +963,11 @@ public:
 		mTests++;
 		auto bTest = TestWithParam(aParam);
 
+		mExecuted[bTest.testName()] = true;
+
 		if (mVerbosity.showTestIntro()) {
-			cout << "Running " << bTest.testName() << " with "
-					<< aParam << " ..." << endl;
+			cout << "Running " << bTest.testName() << " with " << aParam << " ..."
+					<< endl;
 		}
 
 		TestRunnerInterface::setShowAssertionMsg(bTest,
@@ -887,11 +977,19 @@ public:
 
 		try {
 			bTest.run();
-		} catch(AssertException &exc) {
+		} catch (AssertException &exc) {
 			//Should we show the assert here?
 		}
 
 		bTest.teardown();
+
+		bool repSts = true;
+		if (mExecuted[bTest.testName()].valid == true) {
+			repSts = mExecuted[bTest.testName()].status;
+		}
+		repSts &= !bTest.didFail();
+		mExecuted[bTest.testName()] = TestStatus(repSts, bTest.testName(),
+				bTest.printableBreif());
 
 		if (bTest.didFail() == false) {
 			mTestsSucceeded++;
@@ -908,8 +1006,8 @@ public:
 				}
 			} else {
 				if (bTest.didFail()) {
-					cout << "Test failed: " << bTest.testName() << " with "
-							<< aParam << "!" << endl;
+					cout << "Test failed: " << bTest.testName() << " with " << aParam
+							<< "!" << endl;
 				} else {
 					if (mVerbosity.showTestResultSuccess()) {
 						cout << "Test succeeded!" << endl;
@@ -925,9 +1023,16 @@ public:
 			mTests++;
 			auto bTest = TestWithParam(*cParam);
 
+			mExecuted[bTest.testName()] = true;
+
+			string printable = bTest.testName();
+			string paramStr = bTest.printableParam();
+			if (paramStr.length() != 0) {
+				printable += " with " + paramStr;
+			}
+
 			if (mVerbosity.showTestIntro()) {
-				cout << "Running " << bTest.testName() << " with "
-						<< *cParam << " ..." << endl;
+				cout << "Running " << printable << " ..." << endl;
 			}
 
 			TestRunnerInterface::setShowAssertionMsg(bTest,
@@ -937,11 +1042,19 @@ public:
 
 			try {
 				bTest.run();
-			} catch(AssertException &exc) {
+			} catch (AssertException &exc) {
 				//Should we show the assert here?
 			}
 
 			bTest.teardown();
+
+			bool repSts = true;
+			if (mExecuted[bTest.testName()].valid == true) {
+				repSts = mExecuted[bTest.testName()].status;
+			}
+			repSts &= !bTest.didFail();
+			mExecuted[bTest.testName()] = TestStatus(repSts, bTest.testName(),
+					bTest.printableBreif());
 
 			if (bTest.didFail() == false) {
 				mTestsSucceeded++;
@@ -958,8 +1071,7 @@ public:
 					}
 				} else {
 					if (bTest.didFail()) {
-						cout << "Test failed: " << bTest.testName() << " with "
-								<< *cParam << "!" << endl;
+						cout << "Test failed: " << printable << endl;
 					} else {
 						if (mVerbosity.showTestResultSuccess()) {
 							cout << "Test succeeded!" << endl;
@@ -975,6 +1087,8 @@ public:
 		mTests++;
 		auto bTest = TestWithParam(aParam);
 
+		mExecuted[bTest.testName()] = true;
+
 		if (mVerbosity.showTestIntro()) {
 			cout << "Running " << bTest.testName() << " with "
 					<< aParam.printableName() << " ..." << endl;
@@ -987,11 +1101,19 @@ public:
 
 		try {
 			bTest.run();
-		} catch(AssertException &exc) {
+		} catch (AssertException &exc) {
 			//Should we show the assert here?
 		}
 
 		bTest.teardown();
+
+		bool repSts = true;
+		if (mExecuted[bTest.testName()].valid == true) {
+			repSts = mExecuted[bTest.testName()].status;
+		}
+		repSts &= !bTest.didFail();
+		mExecuted[bTest.testName()] = TestStatus(repSts, bTest.testName(),
+				bTest.printableBreif());
 
 		if (bTest.didFail() == false) {
 			mTestsSucceeded++;
@@ -1025,6 +1147,8 @@ public:
 			mTests++;
 			auto bTest = TestWithParam(*cParam);
 
+			mExecuted[bTest.testName()] = true;
+
 			if (mVerbosity.showTestIntro()) {
 				cout << "Running " << bTest.testName() << " with "
 						<< (*cParam).printableName() << " ..." << endl;
@@ -1037,11 +1161,19 @@ public:
 
 			try {
 				bTest.run();
-			} catch(AssertException &exc) {
+			} catch (AssertException &exc) {
 				//Should we show the assert here?
 			}
 
 			bTest.teardown();
+
+			bool repSts = true;
+			if (mExecuted[bTest.testName()].valid == true) {
+				repSts = mExecuted[bTest.testName()].status;
+			}
+			repSts &= !bTest.didFail();
+			mExecuted[bTest.testName()] = TestStatus(repSts, bTest.testName(),
+					bTest.printableBreif());
 
 			if (bTest.didFail() == false) {
 				mTestsSucceeded++;
@@ -1075,13 +1207,26 @@ public:
 		cout << "Summary:" << endl;
 		cout << "======= " << endl;
 		cout << "Tests executed  : " << mTests << endl;
-		uint64_t lTestsFailed = mTests - mTestsSucceeded;
-		if (lTestsFailed != 0) {
+		uint64_t testsFailed = mTests - mTestsSucceeded;
+		if (testsFailed != 0) {
 			cout << "Tests succeeded : " << mTestsSucceeded << endl;
-			cout << "Tests failed    : " << lTestsFailed << endl;
+			cout << "Tests failed    : " << testsFailed << endl;
 		} else {
 			cout << "Hurray! All tests succeeded!" << endl;
 		}
+	}
+
+	void writeReport(string filename) {
+		ofstream myfile;
+		myfile.open(filename);
+		for (auto pair : mExecuted) {
+			TestStatus sts = pair.second;
+			if(!sts.valid) {
+				continue;
+			}
+			myfile << '"' << sts.name << '"' << ',' << (sts.status? "Pass": "Fail") << ',' << '"' << sts.breif << '"' << endl;
+		}
+		myfile.close();
 	}
 };
 
@@ -1095,11 +1240,11 @@ public:
 	}
 
 	explicit GeneratorTypedParamUint8(Generator<uint8_t> const &aSafeQ) :
-		mGen(aSafeQ.clone()) {
+			mGen(aSafeQ.clone()) {
 	}
 
 	explicit GeneratorTypedParamUint8(GeneratorTypedParamUint8 const & aOther) :
-		mGen(aOther.mGen.clone()) {
+			mGen(aOther.mGen.clone()) {
 	}
 
 	uint_t size() const {
