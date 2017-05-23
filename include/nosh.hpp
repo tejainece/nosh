@@ -963,8 +963,6 @@ public:
 		mTests++;
 		auto bTest = TestWithParam(aParam);
 
-		mExecuted[bTest.testName()] = true;
-
 		if (mVerbosity.showTestIntro()) {
 			cout << "Running " << bTest.testName() << " with " << aParam << " ..."
 					<< endl;
@@ -1022,8 +1020,6 @@ public:
 		for (auto cParam = aVector.cbegin(); cParam < aVector.cend(); cParam++) {
 			mTests++;
 			auto bTest = TestWithParam(*cParam);
-
-			mExecuted[bTest.testName()] = true;
 
 			string printable = bTest.testName();
 			string paramStr = bTest.printableParam();
@@ -1087,8 +1083,6 @@ public:
 		mTests++;
 		auto bTest = TestWithParam(aParam);
 
-		mExecuted[bTest.testName()] = true;
-
 		if (mVerbosity.showTestIntro()) {
 			cout << "Running " << bTest.testName() << " with "
 					<< aParam.printableName() << " ..." << endl;
@@ -1146,8 +1140,6 @@ public:
 		for (auto cParam = aGen.cbegin(); cParam < aGen.cend(); cParam++) {
 			mTests++;
 			auto bTest = TestWithParam(*cParam);
-
-			mExecuted[bTest.testName()] = true;
 
 			if (mVerbosity.showTestIntro()) {
 				cout << "Running " << bTest.testName() << " with "
