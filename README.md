@@ -1,5 +1,5 @@
 # nosh
-nosh is a no shit C++ test framework
+nosh is a no shit C++ test framework. The best testing framework in the universe.
 
 # Why write tests with nosh?
 1. What you see is what you get. No magic behind your back.
